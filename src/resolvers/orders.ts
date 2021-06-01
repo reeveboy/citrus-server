@@ -4,7 +4,7 @@ import { Orders } from "../entities/Orders";
 import { AddOrderInput } from "../InputTypes/AddOrderInput";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, Int, Mutation, Resolver, UseMiddleware } from "type-graphql";
 import { getConnection } from "typeorm";
 
 @Resolver(Orders)
@@ -88,10 +88,35 @@ export class OrderResolver {
 
     order.quantity = quantity;
     order.total = quantity * item.rate;
-    order.save();
+    await order.save();
 
     bill.netAmount += order.total - oldTotal;
-    bill.save();
+    await bill.save();
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteOrder(
+    @Arg("bill_id", () => Int) bill_id: number,
+    @Arg("item_id", () => Int) item_id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    const { userId } = req.session;
+    const bill = await Bills.findOne({ where: { bill_id, ownerId: userId } });
+    const order = await Orders.findOne({
+      where: { bill_id, item_id, owner_id: userId },
+    });
+
+    if (!bill || !order) {
+      return false;
+    }
+
+    bill.netAmount -= order.total;
+    await bill.save();
+
+    await Orders.delete({ item_id, bill_id, owner_id: userId });
 
     return true;
   }
