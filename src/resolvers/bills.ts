@@ -50,6 +50,10 @@ export class BillResolver {
       throw new Error("not authorized");
     }
 
+    if (bill.is_settled) {
+      throw new Error("bill is alreeady setled");
+    }
+
     const total = quantity * item.rate;
 
     getConnection().transaction(async (tm) => {
@@ -110,5 +114,56 @@ export class BillResolver {
     }
 
     return bills;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteBill(
+    @Arg("bill_id", () => Int) bill_id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    const bill = await Bills.findOne(bill_id);
+
+    if (!bill) {
+      return false;
+    }
+
+    if (bill.ownerId !== req.session.userId) {
+      throw new Error("not authorized");
+    }
+
+    if (bill.is_settled) {
+      throw new Error("bill is alreeady setled");
+    }
+
+    await Bills.delete(bill_id);
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async settleBill(
+    @Arg("bill_id", () => Int) bill_id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    const bill = await Bills.findOne(bill_id);
+
+    if (!bill) {
+      return false;
+    }
+
+    if (bill.ownerId !== req.session.userId) {
+      throw new Error("not authorized");
+    }
+
+    if (bill.is_settled) {
+      throw new Error("bill is alreeady setled");
+    }
+
+    bill.is_settled = true;
+    await bill.save();
+
+    return true;
   }
 }
