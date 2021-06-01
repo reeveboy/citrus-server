@@ -2,7 +2,7 @@ import { Min } from "class-validator";
 import { Field, InputType, Int } from "type-graphql";
 
 @InputType()
-export class AddBillInput {
+export class AddOrderInput {
   @Field(() => Int)
   bill_id: number;
 

@@ -17,6 +17,7 @@ import cors from "cors";
 import { redis } from "./redis";
 import { ItemResolver } from "./resolvers/item";
 import { BillResolver } from "./resolvers/bills";
+import { OrderResolver } from "./resolvers/orders";
 
 const main = async () => {
   await createConnection();
@@ -24,7 +25,13 @@ const main = async () => {
   // await Item.delete({});
 
   const schema = await buildSchema({
-    resolvers: [HelloResolver, UserResolver, ItemResolver, BillResolver],
+    resolvers: [
+      HelloResolver,
+      UserResolver,
+      ItemResolver,
+      BillResolver,
+      OrderResolver,
+    ],
   });
 
   const app = Express();

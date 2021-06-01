@@ -9,9 +9,7 @@ import {
 } from "type-graphql";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
-import { AddBillInput } from "../InputTypes/AddBillInput";
 import { Bills } from "../entities/Bills";
-import { Item } from "../entities/Item";
 import { getConnection } from "typeorm";
 
 @Resolver(Bills)
@@ -30,53 +28,6 @@ export class BillResolver {
       table_no,
       ownerId: req.session.userId,
     }).save();
-  }
-
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async addOrder(
-    @Arg("input") { bill_id, item_id, quantity }: AddBillInput,
-    @Ctx() { req }: MyContext
-  ): Promise<boolean> {
-    const bill = await Bills.findOne(bill_id);
-    const item = await Item.findOne(item_id);
-    const { userId } = req.session;
-
-    if (!bill || !item) {
-      return false;
-    }
-
-    if (bill.ownerId !== userId || item.ownerId !== userId) {
-      throw new Error("not authorized");
-    }
-
-    if (bill.is_settled) {
-      throw new Error("bill is alreeady setled");
-    }
-
-    const total = quantity * item.rate;
-
-    getConnection().transaction(async (tm) => {
-      await tm.query(
-        `
-        insert into orders 
-        (item_id, bill_id, owner_id, quantity, total)
-        values ($1, $2, $3, $4, $5)
-      `,
-        [item_id, bill_id, userId, quantity, total]
-      );
-
-      await tm.query(
-        `
-        update bills
-        set "netAmount" = "netAmount" + $1
-        where bill_id = $2
-      `,
-        [total, bill_id]
-      );
-    });
-
-    return true;
   }
 
   @Query(() => Bills, { nullable: true })
@@ -106,7 +57,7 @@ export class BillResolver {
   @UseMiddleware(isAuth)
   async getUnsettledBills(@Ctx() { req }: MyContext): Promise<Bills[] | null> {
     const bills = await Bills.find({
-      where: { ownerId: req.session.userId },
+      where: { ownerId: req.session.userId, is_settled: false },
     });
 
     if (!bills) {
