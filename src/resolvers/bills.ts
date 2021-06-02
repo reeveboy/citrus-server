@@ -35,14 +35,12 @@ export class BillResolver {
     @Arg("bill_id", () => Int) bill_id: number,
     @Ctx() { req }: MyContext
   ): Promise<Bills | undefined> {
-    const bill = await Bills.findOne(bill_id);
+    const bill = await Bills.findOne({
+      where: { bill_id, ownerId: req.session.userId },
+    });
 
     if (!bill) {
       return undefined;
-    }
-
-    if (bill.ownerId !== req.session.userId) {
-      throw new Error("not authorized");
     }
 
     return getConnection()
@@ -73,14 +71,12 @@ export class BillResolver {
     @Arg("bill_id", () => Int) bill_id: number,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const bill = await Bills.findOne(bill_id);
+    const bill = await Bills.findOne({
+      where: { bill_id, ownerId: req.session.userId },
+    });
 
     if (!bill) {
       return false;
-    }
-
-    if (bill.ownerId !== req.session.userId) {
-      throw new Error("not authorized");
     }
 
     if (bill.is_settled) {
@@ -98,18 +94,12 @@ export class BillResolver {
     @Arg("bill_id", () => Int) bill_id: number,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const bill = await Bills.findOne(bill_id);
+    const bill = await Bills.findOne({
+      where: { bill_id, ownerId: req.session.userId },
+    });
 
-    if (!bill) {
+    if (!bill || bill.is_settled) {
       return false;
-    }
-
-    if (bill.ownerId !== req.session.userId) {
-      throw new Error("not authorized");
-    }
-
-    if (bill.is_settled) {
-      throw new Error("bill is alreeady setled");
     }
 
     bill.is_settled = true;

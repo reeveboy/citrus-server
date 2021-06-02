@@ -16,18 +16,14 @@ export class OrderResolver {
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
     const { userId } = req.session;
-    const bill = await Bills.findOne(bill_id);
-    const item = await Item.findOne(item_id);
+    const bill = await Bills.findOne({ where: { bill_id, ownerId: userId } });
+    const item = await Item.findOne({ where: { item_id, ownerId: userId } });
     const order = await Orders.findOne({
       where: { item_id, bill_id, owner_id: userId },
     });
 
     if (!bill || !item) {
       return false;
-    }
-
-    if (bill.ownerId !== userId || item.ownerId !== userId) {
-      throw new Error("not authorized");
     }
 
     if (bill.is_settled) {
