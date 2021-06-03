@@ -38,12 +38,12 @@ const main = async () => {
 
   const RedisStore = connectRedis(session);
 
-  app.use(
-    cors({
-      origin: FRONTEND_ORIGIN,
-      credentials: true,
-    })
-  );
+  const corsOptions = {
+    origin: FRONTEND_ORIGIN,
+    credentials: true, // <-- REQUIRED backend setting
+  };
+
+  app.use(cors(corsOptions));
 
   app.use(
     session({
@@ -72,7 +72,7 @@ const main = async () => {
     }),
   });
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({ app, cors: false });
 
   app.listen(4000, () => {
     console.log("server started on http://localhost:4000/graphql");
