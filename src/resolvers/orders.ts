@@ -4,11 +4,32 @@ import { Orders } from "../entities/Orders";
 import { AddOrderInput } from "../InputTypes/AddOrderInput";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
-import { Arg, Ctx, Int, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  FieldResolver,
+  Int,
+  Mutation,
+  Resolver,
+  Root,
+  UseMiddleware,
+} from "type-graphql";
 import { getConnection } from "typeorm";
 
 @Resolver(Orders)
 export class OrderResolver {
+  @FieldResolver(() => String)
+  async itemName(@Root() order: Orders) {
+    const item = await Item.findOne({ where: { item_id: order.item_id } });
+    return item?.name;
+  }
+
+  @FieldResolver(() => String)
+  async itemRate(@Root() order: Orders) {
+    const item = await Item.findOne({ where: { item_id: order.item_id } });
+    return item?.rate;
+  }
+
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async addOrder(

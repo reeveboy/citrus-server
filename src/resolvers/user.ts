@@ -26,6 +26,15 @@ export class UserResolver {
     return User.findOne(req.session.userId);
   }
 
+  @Query(() => Boolean)
+  async isLogged(@Ctx() { req }: MyContext): Promise<boolean> {
+    if (!req.session.userId) {
+      return false;
+    }
+
+    return true;
+  }
+
   @Mutation(() => User)
   async register(
     @Arg("input") { name, email, password }: RegisterInput,
@@ -64,9 +73,9 @@ export class UserResolver {
       return null;
     }
 
-    if (!user.confirmed) {
-      return null;
-    }
+    // if (!user.confirmed) {
+    //   return null;
+    // }
 
     req.session.userId = user.user_id;
 
