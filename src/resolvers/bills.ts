@@ -1,19 +1,27 @@
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from "type-graphql";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { Bills } from "../entities/Bills";
 import { getConnection } from "typeorm";
+import { Orders } from "../entities/Orders";
 
 @Resolver(Bills)
 export class BillResolver {
+  @FieldResolver(() => [Orders], { nullable: true })
+  async firstThreeOrders(@Root() bill: Bills) {
+    return bill.orders.slice(0, 3);
+  }
+
   @Mutation(() => Bills)
   @UseMiddleware(isAuth)
   async createBill(
@@ -62,7 +70,13 @@ export class BillResolver {
       return null;
     }
 
-    return bills;
+    return getConnection()
+      .getRepository(Bills)
+      .createQueryBuilder("b")
+      .leftJoinAndSelect("b.orders", "orders")
+      .where('b."ownerId" = :id', { id: req.session.userId })
+      .andWhere("b.is_settled = false")
+      .getMany();
   }
 
   @Mutation(() => Boolean)
