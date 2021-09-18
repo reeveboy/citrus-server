@@ -76,6 +76,7 @@ export class BillResolver {
       .leftJoinAndSelect("b.orders", "orders")
       .where('b."ownerId" = :id', { id: req.session.userId })
       .andWhere("b.is_settled = false")
+      .orderBy("b.table_no")
       .getMany();
   }
 

@@ -52,7 +52,7 @@ export class OrderResolver {
     }
 
     if (order) {
-      throw new Error("this order already exists");
+      throw new Error("this order already exists"); // Can change this so that it adds the new quantity to the previous one
     }
 
     const total = quantity * item.rate;

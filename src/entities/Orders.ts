@@ -38,4 +38,6 @@ export class Orders extends BaseEntity {
   @Field()
   @Column({ type: "float" }) // maybe remove this and make it a field resolver
   total: number;
+
+  // could make a rate field so that when the user wants to change the rate of the order it doesnt conflict with the original rate
 }
