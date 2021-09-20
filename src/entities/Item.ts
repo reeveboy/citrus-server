@@ -7,9 +7,11 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Category } from "./Category";
 import { Orders } from "./Orders";
 import { User } from "./User";
 
@@ -29,8 +31,11 @@ export class Item extends BaseEntity {
   rate!: number;
 
   @Field()
-  @Column()
-  category!: string;
+  @PrimaryColumn({ type: "int" })
+  category_id!: number;
+  @ManyToOne(() => Category, (category) => category.items)
+  @JoinColumn({ name: "category_id" })
+  category: Category;
 
   @Field()
   @Column()

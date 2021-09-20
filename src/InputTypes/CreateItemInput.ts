@@ -1,5 +1,5 @@
 import { Length, Min } from "class-validator";
-import { Field, InputType } from "type-graphql";
+import { Field, InputType, Int } from "type-graphql";
 
 @InputType()
 export class CreateItemInput {
@@ -11,7 +11,7 @@ export class CreateItemInput {
   @Min(0)
   rate: number;
 
-  @Field()
-  @Length(1, 255)
-  category: string;
+  @Field(() => Int)
+  @Min(1)
+  category_id: number;
 }

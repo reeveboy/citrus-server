@@ -18,6 +18,7 @@ import { redis } from "./redis";
 import { ItemResolver } from "./resolvers/item";
 import { BillResolver } from "./resolvers/bills";
 import { OrderResolver } from "./resolvers/orders";
+import { CategoryResolver } from "./resolvers/category";
 
 const main = async () => {
   await createConnection();
@@ -31,6 +32,7 @@ const main = async () => {
       ItemResolver,
       BillResolver,
       OrderResolver,
+      CategoryResolver,
     ],
   });
 

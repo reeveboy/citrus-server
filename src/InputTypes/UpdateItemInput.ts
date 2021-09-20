@@ -14,7 +14,7 @@ export class UpdateItemInput {
   @Min(0)
   rate: number;
 
-  @Field()
-  @Length(1, 255)
-  category: string;
+  @Field(() => Int)
+  @Min(1)
+  category_id: number;
 }
