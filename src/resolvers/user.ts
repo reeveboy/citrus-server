@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import { sendEmail } from "../utils/sendEmail";
-import { createConfirmationUrl } from "../utils/createConfirmationUrl";
 import { redis } from "../redis";
 import { v4 } from "uuid";
 import {
@@ -14,6 +13,7 @@ import {
 } from "../constants";
 import { RegisterInput } from "../InputTypes/RegisterInput";
 import { ChangePasswordInput } from "../InputTypes/ChangePasswordInput";
+import { createVerificationCode } from "../utils/createVerificationCode";
 
 @Resolver(User)
 export class UserResolver {
@@ -48,9 +48,9 @@ export class UserResolver {
       password: hashedPassword,
     }).save();
 
-    req.session.userId = user.user_id;
+    req.session.userId = user.user_id; // logs in the user
 
-    await sendEmail(user.email, await createConfirmationUrl(user.user_id));
+    await sendEmail(user.email, await createVerificationCode(user.user_id));
 
     return user;
   }
@@ -73,18 +73,14 @@ export class UserResolver {
       return null;
     }
 
-    // if (!user.confirmed) {
-    //   return null;
-    // }
-
     req.session.userId = user.user_id;
 
     return user;
   }
 
   @Mutation(() => Boolean)
-  async confirmUser(@Arg("token") token: string): Promise<boolean> {
-    const userId = await redis.get(CONFIRM_USER_PREFIX + token);
+  async confirmUser(@Arg("code") code: string): Promise<boolean> {
+    const userId = await redis.get(CONFIRM_USER_PREFIX + code);
 
     if (!userId) {
       return false;
@@ -92,7 +88,20 @@ export class UserResolver {
 
     await User.update({ user_id: parseInt(userId, 10) }, { confirmed: true });
 
-    redis.del(token);
+    redis.del(code);
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  async resendVerificationCode(@Ctx() { req }: MyContext): Promise<boolean> {
+    const user = await User.findOne({ where: { user_id: req.session.userId } });
+
+    if (!user) {
+      return false;
+    }
+
+    await sendEmail(user.email, await createVerificationCode(user.user_id));
 
     return true;
   }

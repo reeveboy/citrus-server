@@ -23,7 +23,7 @@ export async function sendEmail(email: string, url: string) {
     to: email, // list of receivers
     subject: "Hello ✔", // Subject line
     text: "Hello world?", // plain text body
-    html: `<a href="${url}">${url}</a>`, // html body
+    html: `<span>Your Verification Code is: ${url}</span>`, // html body
   });
 
   console.log("Message sent: %s", info.messageId);

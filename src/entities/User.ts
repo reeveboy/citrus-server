@@ -29,6 +29,7 @@ export class User extends BaseEntity {
   @Column()
   password!: string;
 
+  @Field()
   @Column("bool", { default: false })
   confirmed: boolean;
 
@@ -46,3 +47,5 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 }
+
+// we can add contact info, website, socail media info, etc
