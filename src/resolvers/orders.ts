@@ -52,7 +52,30 @@ export class OrderResolver {
     }
 
     if (order) {
-      throw new Error("this order already exists"); // Can change this so that it adds the new quantity to the previous one
+      const Total = quantity * item.rate;
+
+      getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+            update orders
+            set quantity = quantity + $1,
+                total = total + $2
+            where bill_id = $3 and item_id = $4
+          `,
+          [quantity, Total, bill_id, item_id]
+        );
+
+        await tm.query(
+          `
+          update bills
+          set "netAmount" = "netAmount" + $1
+          where bill_id = $2
+        `,
+          [Total, bill_id]
+        );
+      });
+
+      return true;
     }
 
     const total = quantity * item.rate;
