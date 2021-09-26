@@ -26,6 +26,10 @@ export class Bills extends BaseEntity {
 
   @Field()
   @Column({ default: 0.0, type: "float" })
+  total: number;
+
+  @Field()
+  @Column({ default: 0.0, type: "float" })
   netAmount: number;
 
   @Column({ default: false })
@@ -41,6 +45,18 @@ export class Bills extends BaseEntity {
   @Field(() => [Orders])
   @OneToMany(() => Orders, (order) => order.bill)
   orders: Orders[];
+
+  @Field()
+  @Column({ default: 0.0, nullable: true, type: "float" })
+  discount: number;
+
+  @Field()
+  @Column({ default: 0.0, nullable: true, type: "float" })
+  offer: number;
+
+  @Field()
+  @Column({ default: 0.0, nullable: true, type: "float" })
+  tax: number;
 
   @Field(() => String)
   @CreateDateColumn()

@@ -2,6 +2,7 @@ import {
   Arg,
   Ctx,
   FieldResolver,
+  Float,
   Int,
   Mutation,
   Query,
@@ -119,6 +120,51 @@ export class BillResolver {
 
     bill.is_settled = true;
     await bill.save();
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async addOffer(
+    @Arg("bill_id", () => Int) bill_id: number,
+    @Arg("discount", () => Float) discount: number,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    const bill = await Bills.findOne({
+      where: { bill_id, ownerId: req.session.userId },
+    });
+
+    if (!bill) {
+      return false;
+    }
+
+    if (bill.is_settled) {
+      throw new Error("bill is alreeady setled");
+    }
+
+    if (discount < 0 || discount > 100) {
+      throw new Error("Discount cannot be that much");
+    }
+
+    if (bill.offer !== 0) {
+      // Previously Discounted
+      bill.discount = discount;
+      bill.netAmount = bill.total + bill.tax;
+
+      bill.offer = (bill.total * discount) / 100;
+      bill.netAmount = bill.netAmount - bill.offer;
+
+      bill.save();
+
+      return true;
+    }
+
+    bill.discount = discount;
+    bill.offer = (bill.total * discount) / 100;
+    bill.netAmount = bill.netAmount - bill.offer;
+
+    bill.save();
 
     return true;
   }

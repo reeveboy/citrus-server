@@ -54,6 +54,11 @@ export class OrderResolver {
     if (order) {
       const Total = quantity * item.rate;
 
+      const BillTotal = bill.total + Total;
+      const Offer = (BillTotal * bill.discount) / 100;
+      const Tax = BillTotal * 0.05;
+      const NetAmount = BillTotal + Tax;
+
       getConnection().transaction(async (tm) => {
         await tm.query(
           `
@@ -68,10 +73,13 @@ export class OrderResolver {
         await tm.query(
           `
           update bills
-          set "netAmount" = "netAmount" + $1
-          where bill_id = $2
+          set total = $1,
+              offer = $2,
+              tax = $3,
+              "netAmount" = $4
+          where bill_id = $5
         `,
-          [Total, bill_id]
+          [BillTotal, Offer, Tax, NetAmount, bill_id]
         );
       });
 
@@ -79,6 +87,11 @@ export class OrderResolver {
     }
 
     const total = quantity * item.rate;
+
+    const billTotal = bill.total + total;
+    const offer = (billTotal * bill.discount) / 100;
+    const tax = billTotal * 0.05;
+    const netAmount = billTotal + tax - offer;
 
     getConnection().transaction(async (tm) => {
       await tm.query(
@@ -93,10 +106,13 @@ export class OrderResolver {
       await tm.query(
         `
         update bills
-        set "netAmount" = "netAmount" + $1
-        where bill_id = $2
+        set total = $1,
+            offer = $2,
+            tax = $3,
+            "netAmount" = $4
+        where bill_id = $5
       `,
-        [total, bill_id]
+        [billTotal, offer, tax, netAmount, bill_id]
       );
     });
 
@@ -130,7 +146,10 @@ export class OrderResolver {
     order.total = quantity * item.rate;
     await order.save();
 
-    bill.netAmount += order.total - oldTotal;
+    bill.total += order.total - oldTotal;
+    bill.offer = (bill.total * bill.discount) / 100;
+    bill.tax = bill.total * 0.05;
+    bill.netAmount = bill.total + bill.tax - bill.offer;
     await bill.save();
 
     return true;
@@ -153,7 +172,10 @@ export class OrderResolver {
       return false;
     }
 
-    bill.netAmount -= order.total;
+    bill.total -= order.total;
+    bill.offer = (bill.total * bill.discount) / 100;
+    bill.tax = bill.total * 0.05;
+    bill.netAmount = bill.total + bill.tax - bill.offer;
     await bill.save();
 
     await Orders.delete({ item_id, bill_id, owner_id: userId });
