@@ -4,6 +4,9 @@ The backend side of the fullstack-graphql project called citrus. Made using Type
 
 This is web application for restuarants to help manage, display and store their data and transactions of all customers in their restuarant
 
+# Web Link:-
+https://github.com/reeveboy/citrus-web
+
 ## Packages
 
 The Packages used for the backend are as follows:-
